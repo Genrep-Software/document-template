@@ -11,6 +11,14 @@ set -e
 PANDOC=pandoc.exe
 PDFLATEX=pdflatex.exe
 
+# Echo usage if the user asks for help
+if echo "$1" \
+  | grep --ignore-case --quiet "^\-h$\|^\-\-help$"; then
+  echo "Usage: $0 <infile.md>"
+  echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+  exit
+fi
+
 # Set the input and output file based on command-line arguments
 INFILE="README.md"
 if [ -n "$1" ]; then
@@ -26,7 +34,9 @@ OUTFILE="$(echo $INFILE | sed 's/\(.*\)\.[^\.]*$/\1/')"".tex"
 
 # Get additional arguments for metadata if not Markdown based on extracting the
 # file extension
-if echo $INFILE | sed 's/.*\.\([^\.]*\)$/\1/' | grep -i md; then
+if echo $INFILE \
+  | sed 's/.*\.\([^\.]*\)$/\1/' \
+  | grep --ignore-case --quiet md; then
   # Assume there is metadata in the file if it is Markdown
   # Output TeX file
   $PANDOC \
