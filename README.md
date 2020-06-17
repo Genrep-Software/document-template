@@ -124,9 +124,10 @@ The general usage of the command for non-Markdown files is:
 ```
 
 The compilation script will throw an error and fail if it is given a
-non-Markdown file with too few arguments. If your title is only one word and
-the author is only one word in the compiled document, make sure to surround the
-command-line arguments with quotation marks.
+non-Markdown file with too few arguments. If, in the generated PDF, the
+displayed title is only a single word and/or the author or date is only a
+single word, make sure to surround the command-line arguments with quotation
+marks.
 
 
 
