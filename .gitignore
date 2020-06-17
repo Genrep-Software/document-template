@@ -1,3 +1,9 @@
 # Ignore temporary Vim swap files
 *.swp
 *.swo
+
+# Ignore LaTeX junk files
+*.aux
+*.log
+*.out
+*.toc
