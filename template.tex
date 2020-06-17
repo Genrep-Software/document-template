@@ -29,8 +29,10 @@
 % Fix issues with fonts when highlighting code
 \usepackage[T1]{fontenc}
 
-% Page header
+% Page header and fix page numbers to use the correct font
 \usepackage{fancyhdr}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
 \pagestyle{fancyplain}
 
 % For strikethrough text
