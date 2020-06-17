@@ -20,7 +20,6 @@
 \usepackage{multicol}
 \usepackage{pdfpages}
 \usepackage{upquote}
-\usepackage{fancyhdr}
 \usepackage{longtable}
 \usepackage{booktabs}
 
@@ -29,6 +28,10 @@
 
 % Fix issues with fonts when highlighting code
 \usepackage[T1]{fontenc}
+
+% Page header
+\usepackage{fancyhdr}
+\pagestyle{fancyplain}
 
 % For strikethrough text
 \usepackage[normalem]{ulem}
@@ -130,13 +133,12 @@ $endif$
     pdfauthor={$author$}]{hyperref}
 
 \title{$title$}
-\author{$author$}
+\author{\biglogo}
 \date{$date$}
 
 % Display logo on the left part of the header and document info at right
 \lhead{\smalllogo}
 \rhead{$title$ \\ $date$}
-\pagestyle{fancyplain}
 
 
 
