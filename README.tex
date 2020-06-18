@@ -51,8 +51,10 @@
 \usepackage{titlesec}
 \titleformat{\section}{\Large\sc}{\thesection\quad}{0em}{}
 \titlespacing{\section}{0em}{1em}{0em}
-\titleformat{\subsection}{\large\sc}{}{0em}{}
+\titleformat{\subsection}{\large\sc}{\thesubsection\quad}{0em}{}
 \titlespacing{\subsection}{0em}{1em}{0em}
+\titleformat{\subsubsection}{\normalsize\sc}{\thesubsubsection\quad}{0em}{}
+\titlespacing{\subsubsection}{0em}{1em}{0em}
 
 % List formatting
 \usepackage{enumerate}
@@ -300,13 +302,70 @@ running the compile script at the command line. One day, the process of
 installing the required files in a destination directory will be
 automated with a small script.
 
+\hypertarget{markdown-files}{%
+\subsubsection{Markdown Files}\label{markdown-files}}
+
+Pandoc-flavored Markdown files can contain metadata (title, author, and
+date) in \href{https://pandoc.org/MANUAL.html\#metadata-blocks}{YAML}
+format.\footnote{\url{https://pandoc.org/MANUAL.html\#metadata-blocks}}
+This data is used while compiling the document, and having a
+\texttt{title} field, an \texttt{author} field, and a \texttt{date}
+field is \emph{absolutely required}. If any of these fields is not
+included, the document may be formatted strangely, and \LaTeX{} may give
+cryptic errors. When debugging this script and the template, the first
+thing to check is whether the test case has the proper metadata. This
+script assumes that if a Markdown file is being typeset, it will have
+data inside.
+
 To compile a Markdown file with YAML metadata inside the file, use:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\ExtensionTok{./compile.sh} \OperatorTok{\textless{}}\NormalTok{filename to convert}\OperatorTok{\textgreater{}}
+\ExtensionTok{./compile.sh} \OperatorTok{\textless{}}\NormalTok{filename to convert (ending in .md)}\OperatorTok{\textgreater{}}
 \end{Highlighting}
 \end{Shaded}
+
+\hypertarget{google-docs-links}{%
+\subsubsection{Google Docs Links}\label{google-docs-links}}
+
+For comiling Google Docs links, it is necessary to include the URL and a
+title. There are also optional \texttt{author} and \texttt{date}
+arguments, but ``Genrep Software, LLC.'' and the date of compilation
+will be used if they are not provided. Make sure to surround the
+command-line arguments with quotation marks.
+
+Also ensure that any Google Docs link used has the correct sharing
+settings. In particular, it must be set so that ``Anyone with the link
+can view,'' that way this script can access the link to export the
+document. If the sharing permissions are set incorrectly, there may be
+cryptic errors due to \LaTeX{} trying to compile a mostly empty
+document.
+
+The general usage of the command for Google Docs links is:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{./compile.sh} \OperatorTok{\textless{}}\NormalTok{Google Docs link}\OperatorTok{\textgreater{}} \StringTok{"\textless{}title\textgreater{}"} \StringTok{"[author]"} \StringTok{"[date]"}
+\end{Highlighting}
+\end{Shaded}
+
+In particular, since the \texttt{author} and \texttt{date} arguments are
+optional, we can do:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{./compile.sh}\NormalTok{ \textbackslash{}}
+  \StringTok{"https://docs.google.com/document/d/1w{-}AzMzVo05u5aeyMHdYXJeiOwdfGFMCQxZ2Ks7\_QWw8/edit"}\NormalTok{ \textbackslash{}}
+  \StringTok{"Old To{-}do List"}
+\end{Highlighting}
+\end{Shaded}
+
+This will generate a nicely-formatted, typeset file called
+\texttt{Old\ To-do\ List.pdf}.
+
+\hypertarget{miscellaneous-document-files}{%
+\subsubsection{Miscellaneous Document
+Files}\label{miscellaneous-document-files}}
 
 To compile any other type of file, it is necessary to manually include
 the title, author, and date metadata. This can be done by specifying
@@ -353,6 +412,156 @@ The file will include various packages based on internal Pandoc
 variables that are set during document compilation. Do some digging in
 there based on the compilation error and see if it is possible to
 determine what the missing package is. Google is your friend here.
+
+\hypertarget{appendix}{%
+\section{Appendix}\label{appendix}}
+
+\hypertarget{compilation-script}{%
+\subsection{Compilation script}\label{compilation-script}}
+
+Included below is a syntax-highlighted dump of the compilation script.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#!/bin/bash}
+
+\CommentTok{\# Compile to LaTeX based on a company{-}wide template}
+\CommentTok{\# Created by Jacob Strieb}
+\CommentTok{\# June 2020}
+
+\KeywordTok{set} \ExtensionTok{{-}e}
+
+\CommentTok{\# XXX: Adjust below if not running in Windows Subsystem for Linux with native}
+\CommentTok{\# Windows Pandoc and pdfLaTeX}
+\VariableTok{PANDOC=}\NormalTok{pandoc.exe}
+\VariableTok{PDFLATEX=}\NormalTok{pdflatex.exe}
+
+\CommentTok{\# Echo usage if the user asks for help}
+\KeywordTok{if} \BuiltInTok{echo} \StringTok{"}\VariableTok{$1}\StringTok{"}\NormalTok{ \textbackslash{}}
+  \KeywordTok{|} \FunctionTok{grep}\NormalTok{ {-}{-}ignore{-}case {-}{-}quiet }\StringTok{"\^{}\textbackslash{}{-}h$\textbackslash{}|\^{}\textbackslash{}{-}\textbackslash{}{-}help$"}\KeywordTok{;} \KeywordTok{then}
+  \BuiltInTok{echo} \StringTok{"Usage: }\VariableTok{$0}\StringTok{ \textless{}infile.md\textgreater{}"}
+  \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}Google Docs URL\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[author]}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[date]}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+  \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}infile.*\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}author\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}date\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+  \BuiltInTok{exit}
+\KeywordTok{fi}
+
+\CommentTok{\# If the input is a Google docs/drive URL, handle and exit}
+\KeywordTok{if} \BuiltInTok{echo} \StringTok{"}\VariableTok{$1}\StringTok{"}\NormalTok{ \textbackslash{}}
+  \KeywordTok{|} \FunctionTok{grep}\NormalTok{ {-}{-}ignore{-}case {-}{-}quiet \textbackslash{}}
+    \StringTok{"\^{}https\textbackslash{}?:\textbackslash{}/\textbackslash{}/[a{-}z]*\textbackslash{}.google\textbackslash{}.com\textbackslash{}/document\textbackslash{}/d\textbackslash{}/"}\KeywordTok{;} \KeywordTok{then}
+  \KeywordTok{if}\BuiltInTok{ [} \OtherTok{{-}z} \StringTok{"}\VariableTok{$2}\StringTok{"}\BuiltInTok{ ]}\NormalTok{; }\KeywordTok{then}
+    \BuiltInTok{echo} \StringTok{"Usage: }\VariableTok{$0}\StringTok{ \textless{}infile.md\textgreater{}"}
+    \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}Google Docs URL\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[author]}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[date]}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+    \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}infile.*\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}author\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}date\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+    \BuiltInTok{exit}
+  \KeywordTok{fi}
+  \VariableTok{DOC\_TITLE=}\StringTok{"}\VariableTok{$2}\StringTok{"}
+  \VariableTok{DOC\_AUTHOR=}\StringTok{"Genrep Software, LLC."}
+  \KeywordTok{if}\BuiltInTok{ [} \OtherTok{{-}n} \StringTok{"}\VariableTok{$3}\StringTok{"}\BuiltInTok{ ]}\NormalTok{; }\KeywordTok{then}
+    \VariableTok{DOC\_AUTHOR=}\StringTok{"}\VariableTok{$3}\StringTok{"}
+  \KeywordTok{fi}
+  \VariableTok{DOC\_DATE=}\StringTok{"}\VariableTok{$(}\FunctionTok{date}\NormalTok{ +}\StringTok{\textquotesingle{}\%A, \%B \%d, \%Y\textquotesingle{}}\VariableTok{)}\StringTok{"}
+  \KeywordTok{if}\BuiltInTok{ [} \OtherTok{{-}n} \StringTok{"}\VariableTok{$4}\StringTok{"}\BuiltInTok{ ]}\NormalTok{; }\KeywordTok{then}
+    \VariableTok{DOC\_DATE=}\StringTok{"}\VariableTok{$4}\StringTok{"}
+  \KeywordTok{fi}
+
+  \VariableTok{EXPORT\_FORMAT=}\StringTok{"docx"}
+
+  \CommentTok{\# Generate an export URL}
+  \BuiltInTok{echo} \StringTok{"Generating export URL..."}
+  \VariableTok{EXPORT\_URL=}\StringTok{"}\VariableTok{$(}\BuiltInTok{echo} \VariableTok{$1} \KeywordTok{|} \FunctionTok{grep}\NormalTok{ {-}o {-}{-}ignore{-}case \textbackslash{}}
+    \StringTok{\textquotesingle{}\^{}https\textbackslash{}?:\textbackslash{}/\textbackslash{}/[a{-}z]*\textbackslash{}.google\textbackslash{}.com\textbackslash{}/document\textbackslash{}/d\textbackslash{}/[a{-}z0{-}9\textbackslash{}\_{-}]*\textbackslash{}/\textquotesingle{}}\VariableTok{)}\StringTok{""export?format=}\VariableTok{$EXPORT\_FORMAT}\StringTok{"}
+  \BuiltInTok{echo} \StringTok{"Exporting from }\VariableTok{$EXPORT\_URL}\StringTok{..."}
+
+  \VariableTok{OUTFILE=}\StringTok{"out.tex"}
+  \VariableTok{TEMPFILE=}\StringTok{"out{-}temp.tex"}
+  \VariableTok{INFILE=}\StringTok{"in.}\VariableTok{$EXPORT\_FORMAT}\StringTok{"}
+
+  \CommentTok{\# Download the document}
+  \ExtensionTok{curl}\NormalTok{ {-}{-}output }\StringTok{"}\VariableTok{$INFILE}\StringTok{"}\NormalTok{ {-}{-}location }\StringTok{"}\VariableTok{$EXPORT\_URL}\StringTok{"}
+
+  \CommentTok{\# Convert to LaTeX}
+  \VariableTok{$PANDOC} \KeywordTok{\textbackslash{}}
+    \ExtensionTok{{-}{-}extract{-}media} \StringTok{"."}\NormalTok{ \textbackslash{}}
+\NormalTok{    {-}{-}template }\StringTok{"template.tex"}\NormalTok{ \textbackslash{}}
+\NormalTok{    {-}{-}metadata title:}\StringTok{"}\VariableTok{$DOC\_TITLE}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{    {-}{-}metadata author:}\StringTok{"}\VariableTok{$DOC\_AUTHOR}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{    {-}{-}metadata date:}\StringTok{"}\VariableTok{$DOC\_DATE}\StringTok{"}\NormalTok{ \textbackslash{}}
+    \StringTok{"}\VariableTok{$INFILE}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{    {-}{-}output }\StringTok{"}\VariableTok{$TEMPFILE}\StringTok{"}
+
+  \CommentTok{\# }\AlertTok{FIXME}\CommentTok{: this needs to be improved}
+  \CommentTok{\# Strip unnecessary quote environments}
+  \FunctionTok{cat} \StringTok{"}\VariableTok{$TEMPFILE}\StringTok{"}\NormalTok{ \textbackslash{}}
+    \KeywordTok{|} \FunctionTok{sed} \StringTok{"s/}\DataTypeTok{\textbackslash{}\textbackslash{}\textbackslash{}\textbackslash{}}\StringTok{\textbackslash{}(begin\textbackslash{}|end\textbackslash{})\{quote\}//g"} \OperatorTok{\textgreater{}} \StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+
+  \CommentTok{\# Compile LaTeX to PDF {-}{-} do it twice for TOC update purposes}
+  \VariableTok{$PDFLATEX} \StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+  \VariableTok{$PDFLATEX} \StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+
+  \CommentTok{\# Clean up}
+  \FunctionTok{cp} \StringTok{"out.pdf"} \StringTok{"}\VariableTok{$DOC\_TITLE}\StringTok{.pdf"}
+  \FunctionTok{rm}\NormalTok{ in* out*}
+  \CommentTok{\# find . {-}name "in*" | xargs rm}
+  \CommentTok{\# find . {-}name "out*" | xargs rm}
+
+  \BuiltInTok{exit}
+\KeywordTok{fi}
+
+\CommentTok{\# Set the input and output file based on command{-}line arguments}
+\VariableTok{INFILE=}\StringTok{"README.md"}
+\KeywordTok{if}\BuiltInTok{ [} \OtherTok{{-}n} \StringTok{"}\VariableTok{$1}\StringTok{"}\BuiltInTok{ ]}\NormalTok{; }\KeywordTok{then}
+  \VariableTok{INFILE=}\StringTok{"}\VariableTok{$1}\StringTok{"}
+\KeywordTok{else}
+  \BuiltInTok{echo} \StringTok{"Please specify an input file to convert!"}
+  \BuiltInTok{echo}
+  \BuiltInTok{echo} \StringTok{"Usage: }\VariableTok{$0}\StringTok{ \textless{}infile.md\textgreater{}"}
+  \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}Google Docs URL\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[author]}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[date]}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+  \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}infile.*\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}author\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}date\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+  \BuiltInTok{echo}
+  \BuiltInTok{echo} \StringTok{"Defaulting to }\DataTypeTok{\textbackslash{}"}\StringTok{README.md}\DataTypeTok{\textbackslash{}"}\StringTok{..."}
+\KeywordTok{fi}
+\CommentTok{\# Strip everything from the last period to the end of the string (inclusive)}
+\VariableTok{OUTFILE=}\StringTok{"}\VariableTok{$(}\BuiltInTok{echo} \VariableTok{$INFILE} \KeywordTok{|} \FunctionTok{sed} \StringTok{\textquotesingle{}s/\textbackslash{}(.*\textbackslash{})\textbackslash{}.[\^{}\textbackslash{}.]*$/\textbackslash{}1/\textquotesingle{}}\VariableTok{)}\StringTok{"".tex"}
+
+\CommentTok{\# Get additional arguments for metadata if not Markdown based on extracting the}
+\CommentTok{\# file extension}
+\KeywordTok{if} \BuiltInTok{echo} \VariableTok{$INFILE}\NormalTok{ \textbackslash{}}
+  \KeywordTok{|} \FunctionTok{sed} \StringTok{\textquotesingle{}s/.*\textbackslash{}.\textbackslash{}([\^{}\textbackslash{}.]*\textbackslash{})$/\textbackslash{}1/\textquotesingle{}}\NormalTok{ \textbackslash{}}
+  \KeywordTok{|} \FunctionTok{grep}\NormalTok{ {-}{-}ignore{-}case {-}{-}quiet md}\KeywordTok{;} \KeywordTok{then}
+  \CommentTok{\# Assume there is metadata in the file if it is Markdown}
+  \CommentTok{\# Output TeX file}
+  \VariableTok{$PANDOC} \KeywordTok{\textbackslash{}}
+    \ExtensionTok{{-}{-}template}\NormalTok{=template.tex \textbackslash{}}
+    \StringTok{"}\VariableTok{$INFILE}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{    {-}{-}output }\StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+\KeywordTok{else}
+  \CommentTok{\# If not Markdown, look for title, author, and date arguments (respectively)}
+  \KeywordTok{if}\BuiltInTok{ [} \StringTok{"}\VariableTok{$\#}\StringTok{"} \OtherTok{{-}eq}\NormalTok{ 4}\BuiltInTok{ ]}\NormalTok{; }\KeywordTok{then}
+    \CommentTok{\# Output TeX file}
+    \VariableTok{$PANDOC} \KeywordTok{\textbackslash{}}
+      \ExtensionTok{{-}{-}template}\NormalTok{=template.tex \textbackslash{}}
+\NormalTok{      {-}{-}metadata title:}\StringTok{"}\VariableTok{$2}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{      {-}{-}metadata author:}\StringTok{"}\VariableTok{$3}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{      {-}{-}metadata date:}\StringTok{"}\VariableTok{$4}\StringTok{"}\NormalTok{ \textbackslash{}}
+      \StringTok{"}\VariableTok{$INFILE}\StringTok{"}\NormalTok{ \textbackslash{}}
+\NormalTok{      {-}{-}output }\StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+  \KeywordTok{else}
+    \BuiltInTok{echo} \StringTok{"Please specify the title, author, and date in quotes!"}
+    \BuiltInTok{echo}
+    \BuiltInTok{echo} \StringTok{"Usage: }\VariableTok{$0}\StringTok{ \textless{}infile.md\textgreater{}"}
+    \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}Google Docs URL\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[author]}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{[date]}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+    \BuiltInTok{echo} \StringTok{"   or  }\VariableTok{$0}\StringTok{ \textless{}infile.*\textgreater{} }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}title\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}author\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{ }\DataTypeTok{\textbackslash{}"}\StringTok{\textless{}date\textgreater{}}\DataTypeTok{\textbackslash{}"}\StringTok{"}
+    \BuiltInTok{exit}
+  \KeywordTok{fi}
+\KeywordTok{fi}
+
+\CommentTok{\# Compile LaTeX to PDF {-}{-} do it twice for TOC update purposes}
+\VariableTok{$PDFLATEX} \StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+\VariableTok{$PDFLATEX} \StringTok{"}\VariableTok{$OUTFILE}\StringTok{"}
+\end{Highlighting}
+\end{Shaded}
+
 
 
 \end{document}

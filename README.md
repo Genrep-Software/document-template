@@ -101,11 +101,54 @@ want to compile and running the compile script at the command line. One day,
 the process of installing the required files in a destination directory will be
 automated with a small script.
 
+### Markdown Files
+
+Pandoc-flavored Markdown files can contain metadata (title, author, and date)
+in [YAML](https://pandoc.org/MANUAL.html#metadata-blocks) format.[^4] This data
+is used while compiling the document, and having a `title` field, an `author`
+field, and a `date` field is *absolutely required*. If any of these fields is
+not included, the document may be formatted strangely, and \LaTeX{} may give
+cryptic errors. When debugging this script and the template, the first thing to
+check is whether the test case has the proper metadata. This script assumes
+that if a Markdown file is being typeset, it will have data inside.
+
 To compile a Markdown file with YAML metadata inside the file, use:
 
 ``` { .bash }
-./compile.sh <filename to convert>
+./compile.sh <filename to convert (ending in .md)>
 ```
+
+### Google Docs Links
+
+For comiling Google Docs links, it is necessary to include the URL and a title.
+There are also optional `author` and `date` arguments, but "Genrep Software,
+LLC." and the date of compilation will be used if they are not provided. Make
+sure to surround the command-line arguments with quotation marks.
+
+Also ensure that any Google Docs link used has the correct sharing settings. In
+particular, it must be set so that "Anyone with the link can view," that way
+this script can access the link to export the document. If the sharing
+permissions are set incorrectly, there may be cryptic errors due to \LaTeX{}
+trying to compile a mostly empty document.
+
+
+The general usage of the command for Google Docs links is:
+
+``` { .bash }
+./compile.sh <Google Docs link> "<title>" "[author]" "[date]"
+```
+
+In particular, since the `author` and `date` arguments are optional, we can do:
+
+``` { .bash }
+./compile.sh \
+  "https://docs.google.com/document/d/1w-AzMzVo05u5aeyMHdYXJeiOwdfGFMCQxZ2Ks7_QWw8/edit" \
+  "Old To-do List"
+```
+
+This will generate a nicely-formatted, typeset file called `Old To-do List.pdf`.
+
+### Miscellaneous Document Files
 
 To compile any other type of file, it is necessary to manually include the
 title, author, and date metadata. This can be done by specifying them as
@@ -149,6 +192,152 @@ package is. Google is your friend here.
 
 
 
+# Appendix
+
+## Compilation script
+
+Included below is a syntax-highlighted dump of the compilation script.
+
+``` { .bash }
+#!/bin/bash
+
+# Compile to LaTeX based on a company-wide template
+# Created by Jacob Strieb
+# June 2020
+
+set -e
+
+# XXX: Adjust below if not running in Windows Subsystem for Linux with native
+# Windows Pandoc and pdfLaTeX
+PANDOC=pandoc.exe
+PDFLATEX=pdflatex.exe
+
+# Echo usage if the user asks for help
+if echo "$1" \
+  | grep --ignore-case --quiet "^\-h$\|^\-\-help$"; then
+  echo "Usage: $0 <infile.md>"
+  echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
+  echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+  exit
+fi
+
+# If the input is a Google docs/drive URL, handle and exit
+if echo "$1" \
+  | grep --ignore-case --quiet \
+    "^https\?:\/\/[a-z]*\.google\.com\/document\/d\/"; then
+  if [ -z "$2" ]; then
+    echo "Usage: $0 <infile.md>"
+    echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
+    echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+    exit
+  fi
+  DOC_TITLE="$2"
+  DOC_AUTHOR="Genrep Software, LLC."
+  if [ -n "$3" ]; then
+    DOC_AUTHOR="$3"
+  fi
+  DOC_DATE="$(date +'%A, %B %d, %Y')"
+  if [ -n "$4" ]; then
+    DOC_DATE="$4"
+  fi
+
+  EXPORT_FORMAT="docx"
+
+  # Generate an export URL
+  echo "Generating export URL..."
+  EXPORT_URL="$(echo $1 | grep -o --ignore-case \
+    '^https\?:\/\/[a-z]*\.google\.com\/document\/d\/[a-z0-9\_-]*\/')""export?format=$EXPORT_FORMAT"
+  echo "Exporting from $EXPORT_URL..."
+
+  OUTFILE="out.tex"
+  TEMPFILE="out-temp.tex"
+  INFILE="in.$EXPORT_FORMAT"
+
+  # Download the document
+  curl --output "$INFILE" --location "$EXPORT_URL"
+
+  # Convert to LaTeX
+  $PANDOC \
+    --extract-media "." \
+    --template "template.tex" \
+    --metadata title:"$DOC_TITLE" \
+    --metadata author:"$DOC_AUTHOR" \
+    --metadata date:"$DOC_DATE" \
+    "$INFILE" \
+    --output "$TEMPFILE"
+
+  # FIXME: this needs to be improved
+  # Strip unnecessary quote environments
+  cat "$TEMPFILE" \
+    | sed "s/\\\\\(begin\|end\){quote}//g" > "$OUTFILE"
+
+  # Compile LaTeX to PDF -- do it twice for TOC update purposes
+  $PDFLATEX "$OUTFILE"
+  $PDFLATEX "$OUTFILE"
+
+  # Clean up
+  cp "out.pdf" "$DOC_TITLE.pdf"
+  rm in* out*
+  # find . -name "in*" | xargs rm
+  # find . -name "out*" | xargs rm
+
+  exit
+fi
+
+# Set the input and output file based on command-line arguments
+INFILE="README.md"
+if [ -n "$1" ]; then
+  INFILE="$1"
+else
+  echo "Please specify an input file to convert!"
+  echo
+  echo "Usage: $0 <infile.md>"
+  echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
+  echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+  echo
+  echo "Defaulting to \"README.md\"..."
+fi
+# Strip everything from the last period to the end of the string (inclusive)
+OUTFILE="$(echo $INFILE | sed 's/\(.*\)\.[^\.]*$/\1/')"".tex"
+
+# Get additional arguments for metadata if not Markdown based on extracting the
+# file extension
+if echo $INFILE \
+  | sed 's/.*\.\([^\.]*\)$/\1/' \
+  | grep --ignore-case --quiet md; then
+  # Assume there is metadata in the file if it is Markdown
+  # Output TeX file
+  $PANDOC \
+    --template=template.tex \
+    "$INFILE" \
+    --output "$OUTFILE"
+else
+  # If not Markdown, look for title, author, and date arguments (respectively)
+  if [ "$#" -eq 4 ]; then
+    # Output TeX file
+    $PANDOC \
+      --template=template.tex \
+      --metadata title:"$2" \
+      --metadata author:"$3" \
+      --metadata date:"$4" \
+      "$INFILE" \
+      --output "$OUTFILE"
+  else
+    echo "Please specify the title, author, and date in quotes!"
+    echo
+    echo "Usage: $0 <infile.md>"
+    echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
+    echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+    exit
+  fi
+fi
+
+# Compile LaTeX to PDF -- do it twice for TOC update purposes
+$PDFLATEX "$OUTFILE"
+$PDFLATEX "$OUTFILE"
+```
+
+
 
 [^1]: These two options are completely interchangeable. `-M` makes more sense
       for use in the terminal, whereas `--metadata` makes much more sense for
@@ -157,3 +346,5 @@ package is. Google is your friend here.
 [^2]: <https://pandoc.org/MANUAL.html#pandocs-markdown>
 
 [^3]: <https://www.overleaf.com/>
+
+[^4]: <https://pandoc.org/MANUAL.html#metadata-blocks>
