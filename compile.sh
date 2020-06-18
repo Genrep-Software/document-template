@@ -15,7 +15,7 @@ PDFLATEX=pdflatex.exe
 if echo "$1" \
   | grep --ignore-case --quiet "^\-h$\|^\-\-help$"; then
   echo "Usage: $0 <infile.md>"
-  echo "   or  $0 <Google Docs URL> \"<title>\""
+  echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
   echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
   exit
 fi
@@ -26,9 +26,18 @@ if echo "$1" \
     "^https\?:\/\/[a-z]*\.google\.com\/document\/d\/"; then
   if [ -z "$2" ]; then
     echo "Usage: $0 <infile.md>"
-    echo "   or  $0 <Google Docs URL> \"<title>\""
+    echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
     echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
     exit
+  fi
+  DOC_TITLE="$2"
+  DOC_AUTHOR="Genrep Software, LLC."
+  if [ -n "$3" ]; then
+    DOC_AUTHOR="$3"
+  fi
+  DOC_DATE="$(date +'%A, %B %d, %Y')"
+  if [ -n "$4" ]; then
+    DOC_DATE="$4"
   fi
 
   EXPORT_FORMAT="docx"
@@ -50,9 +59,9 @@ if echo "$1" \
   $PANDOC \
     --extract-media "." \
     --template "template.tex" \
-    --metadata title:"$2" \
-    --metadata author:"Genrep Software, LLC." \
-    --metadata date:"$(date +'%A, %B %d, %Y')" \
+    --metadata title:"$DOC_TITLE" \
+    --metadata author:"$DOC_AUTHOR" \
+    --metadata date:"$DOC_DATE" \
     "$INFILE" \
     --output "$TEMPFILE"
 
@@ -65,6 +74,12 @@ if echo "$1" \
   $PDFLATEX "$OUTFILE"
   $PDFLATEX "$OUTFILE"
 
+  # Clean up
+  cp "out.pdf" "$DOC_TITLE.pdf"
+  rm in* out*
+  # find . -name "in*" | xargs rm
+  # find . -name "out*" | xargs rm
+
   exit
 fi
 
@@ -76,7 +91,7 @@ else
   echo "Please specify an input file to convert!"
   echo
   echo "Usage: $0 <infile.md>"
-  echo "   or  $0 <Google Docs URL> \"<title>\""
+  echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
   echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
   echo
   echo "Defaulting to \"README.md\"..."
@@ -110,7 +125,7 @@ else
     echo "Please specify the title, author, and date in quotes!"
     echo
     echo "Usage: $0 <infile.md>"
-    echo "   or  $0 <Google Docs URL> \"<title>\""
+    echo "   or  $0 <Google Docs URL> \"<title>\" \"[author]\" \"[date]\""
     echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
     exit
   fi
