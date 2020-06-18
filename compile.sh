@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Compile README from Markdown to LaTeX
+# Compile to LaTeX based on a company-wide template
 # Created by Jacob Strieb
 # June 2020
 
@@ -15,7 +15,56 @@ PDFLATEX=pdflatex.exe
 if echo "$1" \
   | grep --ignore-case --quiet "^\-h$\|^\-\-help$"; then
   echo "Usage: $0 <infile.md>"
+  echo "   or  $0 <Google Docs URL> \"<title>\""
   echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+  exit
+fi
+
+# If the input is a Google docs/drive URL, handle and exit
+if echo "$1" \
+  | grep --ignore-case --quiet \
+    "^https\?:\/\/[a-z]*\.google\.com\/document\/d\/"; then
+  if [ -z "$2" ]; then
+    echo "Usage: $0 <infile.md>"
+    echo "   or  $0 <Google Docs URL> \"<title>\""
+    echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+    exit
+  fi
+
+  EXPORT_FORMAT="docx"
+
+  # Generate an export URL
+  echo "Generating export URL..."
+  EXPORT_URL="$(echo $1 | grep -o --ignore-case \
+    '^https\?:\/\/[a-z]*\.google\.com\/document\/d\/[a-z0-9\_-]*\/')""export?format=$EXPORT_FORMAT"
+  echo "Exporting from $EXPORT_URL..."
+
+  OUTFILE="out.tex"
+  TEMPFILE="out-temp.tex"
+  INFILE="in.$EXPORT_FORMAT"
+
+  # Download the document
+  curl --output "$INFILE" --location "$EXPORT_URL"
+
+  # Convert to LaTeX
+  $PANDOC \
+    --extract-media "." \
+    --template "template.tex" \
+    --metadata title:"$2" \
+    --metadata author:"Genrep Software, LLC." \
+    --metadata date:"$(date +'%A, %B %d, %Y')" \
+    "$INFILE" \
+    --output "$TEMPFILE"
+
+  # FIXME: this needs to be improved
+  # Strip unnecessary quote environments
+  cat "$TEMPFILE" \
+    | sed "s/\\\\\(begin\|end\){quote}//g" > "$OUTFILE"
+
+  # Compile LaTeX to PDF -- do it twice for TOC update purposes
+  $PDFLATEX "$OUTFILE"
+  $PDFLATEX "$OUTFILE"
+
   exit
 fi
 
@@ -25,8 +74,11 @@ if [ -n "$1" ]; then
   INFILE="$1"
 else
   echo "Please specify an input file to convert!"
+  echo
   echo "Usage: $0 <infile.md>"
+  echo "   or  $0 <Google Docs URL> \"<title>\""
   echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
+  echo
   echo "Defaulting to \"README.md\"..."
 fi
 # Strip everything from the last period to the end of the string (inclusive)
@@ -56,7 +108,9 @@ else
       --output "$OUTFILE"
   else
     echo "Please specify the title, author, and date in quotes!"
+    echo
     echo "Usage: $0 <infile.md>"
+    echo "   or  $0 <Google Docs URL> \"<title>\""
     echo "   or  $0 <infile.*> \"<title>\" \"<author>\" \"<date>\""
     exit
   fi
