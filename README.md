@@ -93,6 +93,22 @@ following links (respectively):
 - <https://pandoc.org/installing.html>
 - <http://www.tug.org/texlive/acquire-netinstall.html>
 
+Once these are set up, clone the repository for access to the compilation
+script, logo image, and document template.
+
+``` { .bash }
+git clone https://github.com/Genrep-Software/document-template.git &&
+cd document-template
+```
+
+To test your Pandoc/\LaTeX{} installation, try compiling the `README.md` file
+from within the `document-template` repository directory. Make sure the
+resulting PDF file is viewable.
+
+``` { .bash }
+./compile.sh README.md
+```
+
 ## Usage
 
 Using the template is just a matter of cloning the repository and copying
@@ -189,6 +205,17 @@ The file will include various packages based on internal Pandoc variables that
 are set during document compilation. Do some digging in there based on the
 compilation error and see if it is possible to determine what the missing
 package is. Google is your friend here.
+
+
+
+# Further Reading
+
+This document primarily contains information specific to this script and
+template. To learn more about Pandoc-flavored Markdown, or to contribute
+effectively to this project, click the links below.
+
+- <https://pandoc.org/MANUAL.html>
+- <https://www.tug.org/begin.html>
 
 
 

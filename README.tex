@@ -292,6 +292,26 @@ Installation instructions can be found at the following links
   \url{http://www.tug.org/texlive/acquire-netinstall.html}
 \end{itemize}
 
+Once these are set up, clone the repository for access to the
+compilation script, logo image, and document template.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{git}\NormalTok{ clone https://github.com/Genrep{-}Software/document{-}template.git }\KeywordTok{\&\&}
+\BuiltInTok{cd}\NormalTok{ document{-}template}
+\end{Highlighting}
+\end{Shaded}
+
+To test your Pandoc/\LaTeX{} installation, try compiling the
+\texttt{README.md} file from within the \texttt{document-template}
+repository directory. Make sure the resulting PDF file is viewable.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{./compile.sh}\NormalTok{ README.md}
+\end{Highlighting}
+\end{Shaded}
+
 \hypertarget{usage}{%
 \subsection{Usage}\label{usage}}
 
@@ -412,6 +432,21 @@ The file will include various packages based on internal Pandoc
 variables that are set during document compilation. Do some digging in
 there based on the compilation error and see if it is possible to
 determine what the missing package is. Google is your friend here.
+
+\hypertarget{further-reading}{%
+\section{Further Reading}\label{further-reading}}
+
+This document primarily contains information specific to this script and
+template. To learn more about Pandoc-flavored Markdown, or to contribute
+effectively to this project, click the links below.
+
+\begin{itemize}
+\tightlist
+\item
+  \url{https://pandoc.org/MANUAL.html}
+\item
+  \url{https://www.tug.org/begin.html}
+\end{itemize}
 
 
 \end{document}
