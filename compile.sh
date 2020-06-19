@@ -20,6 +20,16 @@ if echo "$1" \
   exit
 fi
 
+# Make sure we have a template.tex and logo.png file in the current direcotry
+if [ ! -f "template.tex" ]; then
+  curl --location --output "template.tex" \
+  "https://github.com/Genrep-Software/document-template/raw/master/template.tex"
+fi
+if [ ! -f "logo.png" ]; then
+  curl --location --output "logo.png" \
+  "https://github.com/Genrep-Software/document-template/raw/master/logo.png"
+fi
+
 # If the input is a Google docs/drive URL, handle and exit
 if echo "$1" \
   | grep --ignore-case --quiet \
@@ -76,7 +86,7 @@ if echo "$1" \
 
   # Clean up
   cp "out.pdf" "$DOC_TITLE.pdf"
-  rm in* out*
+  rm in.* out.*
   # find . -name "in*" | xargs rm
   # find . -name "out*" | xargs rm
 
