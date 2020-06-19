@@ -6,10 +6,27 @@
 
 set -e
 
-# XXX: Adjust below if not running in Windows Subsystem for Linux with native
-# Windows Pandoc and pdfLaTeX
+# Look for pandoc.exe and pdflatex.exe, if they don't exist, look for
+# non-Windows versions. If neither exists, they are not on the PATH, and the
+# program cannot continue.
 PANDOC=pandoc.exe
+if ! which "$PANDOC" > /dev/null; then
+  PANDOC=pandoc
+  if ! which "$PANDOC" > /dev/null; then
+    echo "Pandoc is required in order to compile the document."
+    echo "Add Pandoc to the PATH or modify $0 to use the correct pandoc binary."
+    exit
+  fi
+fi
 PDFLATEX=pdflatex.exe
+if ! which "$PDFLATEX" > /dev/null; then
+  PDFLATEX=pdflatex
+  if ! which "$PDFLATEX" > /dev/null; then
+    echo "pdfLaTeX is required in order to compile the document."
+    echo "Add pdfLaTeX to the PATH or modify $0 to use the correct pdfLaTeX binary."
+    exit
+  fi
+fi
 
 # Echo usage if the user asks for help
 if echo "$1" \
@@ -23,11 +40,11 @@ fi
 # Make sure we have a template.tex and logo.png file in the current direcotry
 if [ ! -f "template.tex" ]; then
   curl --location --output "template.tex" \
-  "https://github.com/Genrep-Software/document-template/raw/master/template.tex"
+    "https://github.com/Genrep-Software/document-template/raw/master/template.tex"
 fi
 if [ ! -f "logo.png" ]; then
   curl --location --output "logo.png" \
-  "https://github.com/Genrep-Software/document-template/raw/master/logo.png"
+    "https://github.com/Genrep-Software/document-template/raw/master/logo.png"
 fi
 
 # If the input is a Google docs/drive URL, handle and exit
