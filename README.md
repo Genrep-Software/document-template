@@ -111,11 +111,10 @@ resulting PDF file is viewable.
 
 ## Usage
 
-Using the template is just a matter of cloning the repository and copying
-`template.tex`, `compile.sh`, and `logo.png` into the folder of a document you
-want to compile and running the compile script at the command line. One day,
-the process of installing the required files in a destination directory will be
-automated with a small script.
+Using the template is just a matter of cloning the repository and running the
+`compile.sh` script. If there is no `logo.png` or `template.tex` in the working
+directory where the script is called, it will automatically pull the latest
+versions from the GitHub repository.
 
 ### Markdown Files
 

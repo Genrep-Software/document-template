@@ -316,11 +316,10 @@ repository directory. Make sure the resulting PDF file is viewable.
 \subsection{Usage}\label{usage}}
 
 Using the template is just a matter of cloning the repository and
-copying \texttt{template.tex}, \texttt{compile.sh}, and
-\texttt{logo.png} into the folder of a document you want to compile and
-running the compile script at the command line. One day, the process of
-installing the required files in a destination directory will be
-automated with a small script.
+running the \texttt{compile.sh} script. If there is no \texttt{logo.png}
+or \texttt{template.tex} in the working directory where the script is
+called, it will automatically pull the latest versions from the GitHub
+repository.
 
 \hypertarget{markdown-files}{%
 \subsubsection{Markdown Files}\label{markdown-files}}
