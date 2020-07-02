@@ -95,10 +95,7 @@ if echo "$1" \
   # FIXME: this needs to be improved
   # Strip unnecessary quote environments
   cat "$TEMPFILE" \
-    | sed "s/\\\\\(begin\|end\){quote}//g" > "$OUTFILE"
-  # FIXME: This condenses all paragraphs together, commented-out for now
-  # Remove blank lines
-  # sed -i "/^\s*$/d" "$OUTFILE"
+    | sed "/\\\\\(begin\|end\){quote}/d" > "$OUTFILE"
 
   # Compile LaTeX to PDF -- do it twice for TOC update purposes
   $PDFLATEX "$OUTFILE"
