@@ -53,11 +53,11 @@
 
 % Format section headers
 \usepackage{titlesec}
-\titleformat{\section}{\Large\sc}{\thesection\quad}{0em}{}
+\titleformat{\section}{\Large\sc\lowercase}{\thesection\quad}{0em}{}
 \titlespacing{\section}{0em}{1em}{0em}
-\titleformat{\subsection}{\large\sc}{\thesubsection\quad}{0em}{}
+\titleformat{\subsection}{\large\sc\lowercase}{\thesubsection\quad}{0em}{}
 \titlespacing{\subsection}{0em}{1em}{0em}
-\titleformat{\subsubsection}{\normalsize\sc}{\thesubsubsection\quad}{0em}{}
+\titleformat{\subsubsection}{\normalsize\sc\lowercase}{\thesubsubsection\quad}{0em}{}
 \titlespacing{\subsubsection}{0em}{1em}{0em}
 
 % List formatting
@@ -101,8 +101,9 @@ $endif$
 % Redefine the ampersand to use the italic version by default - as-per Elements
 % of Typographic Style
 % See: https://tex.stackexchange.com/a/47353/150811
-\let\textand\&
-\renewcommand{\&}{\textit{\textand}}
+% Note: looks better with serif typefaces
+% \let\textand\&
+% \renewcommand{\&}{\textit{\textand}}
 
 % Redefine the maketitle command to format properly, and not have a header on
 % the page
